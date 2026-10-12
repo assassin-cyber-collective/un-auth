@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#02040a">
+<meta name="description" content="DARKNIGHT Ai Admin Control">
+<title>DARKNIGHT Ai — Admin Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===================== RESET ===================== */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02040a;--panel:#070b14;--panel2:#0a0f1c;
+  --blue:#3d7dff;--blue2:#1e5dd9;--blue3:#5f97ff;--cyan:#4dd4ff;
+  --text:#eef3fb;--muted:#8892a6;--dim:#4f586c;
+  --line:rgba(61,125,255,.22);--whiteLine:rgba(255,255,255,.07);
+  --glow:0 0 60px rgba(61,125,255,.22);
+}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:Inter,Arial,sans-serif;overflow-x:hidden;
+  background:
+    radial-gradient(1000px 600px at 50% -10%,rgba(61,125,255,.16),transparent 60%),
+    radial-gradient(700px 450px at 85% 25%,rgba(77,212,255,.06),transparent 65%),
+    radial-gradient(800px 500px at 15% 75%,rgba(30,93,217,.07),transparent 70%),
+    var(--bg);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(rgba(255,255,255,.013) 1px,transparent 1px);
+  background-size:100% 4px;opacity:.28;
+}
+.noise{
+  position:fixed;inset:0;pointer-events:none;opacity:.03;z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+.scanline{
+  position:fixed;left:0;right:0;top:-20%;height:1px;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+  opacity:.26;box-shadow:0 0 24px var(--blue);
+  animation:scan 8s linear infinite;
+}
+@keyframes scan{to{top:120%}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseGlow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinReverse{to{transform:rotate(-360deg)}}
+@keyframes ripple{0%{transform:scale(.85);opacity:.75}100%{transform:scale(1.55);opacity:0}}
+
+/* ===================== SHELL ===================== */
+.app-shell{position:relative;z-index:3;min-height:100vh;max-width:1500px;margin:auto}
+
+/* ===================== TOPBAR ===================== */
+.topbar{
+  height:86px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 clamp(16px,4vw,48px);
+  border-bottom:1px solid var(--whiteLine);
+  background:rgba(2,4,10,.82);backdrop-filter:blur(24px);
+  position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--text)}
+.brand-mark{
+  width:46px;height:46px;display:grid;place-items:center;position:relative;
+  color:#fff;font:900 19px Orbitron;
+  clip-path:polygon(23% 0,77% 0,100% 50%,77% 100%,23% 100%,0 50%);
+  background:linear-gradient(145deg,#4d8bff,#0f3a99);
+  box-shadow:0 0 30px rgba(61,125,255,.5);
+  animation:pulseGlow 3s ease-in-out infinite;
+}
+.brand-mark:after{content:"";position:absolute;inset:1.5px;background:#050810;clip-path:inherit}
+.brand-mark span{position:relative;z-index:1}
+.brand-copy strong{display:block;font:800 19px Orbitron;letter-spacing:1.2px}
+.brand-copy i{font-style:normal;color:var(--blue3)}
+.brand-copy small{display:block;margin-top:4px;color:var(--cyan);font:700 7px Orbitron;letter-spacing:2.4px}
+.top-actions{display:flex;align-items:center;gap:18px}
+.live-dot{
+  display:flex;align-items:center;gap:7px;
+  color:#7a8498;font:700 8px Orbitron;letter-spacing:1.4px;
+}
+.live-dot b{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#4dd4ff;box-shadow:0 0 12px #4dd4ff;
+  animation:pulseGlow 1.6s ease-in-out infinite;
+}
+.open-ai{
+  color:var(--blue3);border:1px solid rgba(61,125,255,.5);border-radius:9px;
+  text-decoration:none;padding:11px 15px;
+  font:700 9px Orbitron;letter-spacing:.9px;transition:.25s;
+}
+.open-ai:hover{background:rgba(61,125,255,.12);box-shadow:0 0 24px rgba(61,125,255,.28);transform:translateY(-1px)}
+
+/* ===================== PAGE ===================== */
+.page{width:min(1180px,calc(100% - 32px));margin:auto;padding:44px 0 55px}
+.hidden{display:none!important}
+
+/* ===================== LOADING SCREEN ===================== */
+.loading-wrap{
+  min-height:calc(100vh - 170px);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:28px;
+}
+.loader-core{
+  position:relative;width:130px;height:130px;
+  display:grid;place-items:center;
+}
+.loader-core .ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid transparent;
+}
+.loader-core .ring.r1{
+  border-top-color:var(--blue);border-right-color:var(--blue);
+  animation:spin 1.1s linear infinite;
+  filter:drop-shadow(0 0 12px var(--blue));
+}
+.loader-core .ring.r2{
+  inset:14px;border-bottom-color:var(--cyan);border-left-color:var(--cyan);
+  animation:spinReverse 1.6s linear infinite;
+  filter:drop-shadow(0 0 12px var(--cyan));
+}
+.loader-core .ring.r3{
+  inset:28px;border-top-color:var(--blue3);
+  animation:spin 2.2s linear infinite;
+  filter:drop-shadow(0 0 10px var(--blue3));
+}
+.loader-core .core-dot{
+  width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle,var(--cyan),var(--blue) 70%);
+  box-shadow:0 0 30px var(--blue),0 0 60px rgba(61,125,255,.4);
+  animation:pulseGlow 1.4s ease-in-out infinite;
+}
+.loader-core .ripple{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid var(--blue);
+  animation:ripple 1.8s ease-out infinite;
+}
+.loader-core .ripple.d{animation-delay:.9s}
+.loader-text{
+  font:700 11px Orbitron;letter-spacing:3px;
+  color:var(--blue3);
+  text-shadow:0 0 14px rgba(61,125,255,.55);
+  animation:pulseGlow 1.6s ease-in-out infinite;
+}
+.loader-sub{
+  font:600 8px Orbitron;letter-spacing:2.4px;
+  color:#4f586c;
+}
+
+/* ===================== DASHBOARD HEAD ===================== */
+.dashboard-head{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:24px;margin-bottom:22px;animation:fadeUp .5s ease;
+}
+.eyebrow{font:700 9px Orbitron;letter-spacing:2.8px;color:var(--blue3)}
+.dashboard-head h1{
+  font:800 clamp(30px,5vw,44px) Orbitron;letter-spacing:-1px;
+  margin:10px 0 8px;
+  background:linear-gradient(135deg,#fff 30%,#5f97ff 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.dashboard-head p{color:var(--muted);font-size:13px;line-height:1.75;max-width:560px}
+.head-actions{display:flex;gap:9px}
+
+/* ===================== BUTTONS ===================== */
+.btn{
+  border:0;cursor:pointer;border-radius:10px;padding:12px 16px;
+  font:700 9px Orbitron;letter-spacing:1.1px;transition:.22s;white-space:nowrap;
+}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{
+  color:#fff;background:linear-gradient(135deg,#4d8bff,#1e5dd9);
+  box-shadow:0 10px 30px rgba(61,125,255,.28);
+}
+.btn-primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 15px 40px rgba(61,125,255,.45);
+}
+.btn-ghost{
+  background:rgba(255,255,255,.03);color:#b0bac9;
+  border:1px solid rgba(255,255,255,.1);
+}
+.btn-ghost:hover{border-color:rgba(61,125,255,.5);color:#fff;background:rgba(61,125,255,.08)}
+.btn-danger{background:rgba(255,60,80,.06);color:#ff6f7f;border:1px solid rgba(255,80,100,.36)}
+.btn-danger:hover{background:rgba(255,60,80,.12)}
+
+/* ===================== SYSTEM STRIP ===================== */
+.system-strip{
+  display:flex;align-items:center;gap:11px;padding:13px 16px;margin-bottom:14px;
+  border:1px solid var(--whiteLine);border-radius:11px;
+  background:linear-gradient(90deg,rgba(61,125,255,.05),rgba(255,255,255,.005));
+  color:#757f93;font:700 8px Orbitron;letter-spacing:1.3px;
+  animation:fadeUp .5s ease .05s backwards;
+}
+.system-strip strong{color:#4dd4ff}
+.system-strip em{margin-left:auto;font-style:normal;color:#4f586c}
+.pulse{
+  display:inline-block;width:7px;height:7px;background:#4dd4ff;
+  border-radius:50%;box-shadow:0 0 12px #4dd4ff;
+  animation:pulseGlow 1.6s ease-in-out infinite;
+}
+
+/* ===================== STATS ===================== */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:15px}
+.stat-card{
+  position:relative;padding:22px;border:1px solid var(--line);border-radius:14px;
+  background:linear-gradient(145deg,#080d18,#050710);overflow:hidden;
+  transition:.3s;animation:fadeUp .5s ease backwards;
+}
+.stat-card:nth-child(1){animation-delay:.08s}
+.stat-card:nth-child(2){animation-delay:.14s}
+.stat-card:nth-child(3){animation-delay:.2s}
+.stat-card:hover{transform:translateY(-3px);border-color:rgba(61,125,255,.55);box-shadow:var(--glow)}
+.stat-card:after{
+  content:"";position:absolute;width:100px;height:100px;right:-40px;bottom:-40px;
+  border-radius:50%;background:rgba(61,125,255,.1);filter:blur(6px);
+}
+.stat-top{display:flex;justify-content:space-between;color:#6e788c;font:700 8px Orbitron;letter-spacing:1.5px}
+.stat-top i{font-style:normal;color:#3c4458}
+.stat-card>strong{display:block;color:#5f97ff;font:800 30px Orbitron;margin:14px 0 8px;letter-spacing:-.5px}
+.stat-card>small{color:#5c6579;font:700 7px Orbitron;letter-spacing:1.3px}
+.status-card>strong{font-size:22px}
+
+/* ===================== WORKSPACE ===================== */
+.workspace{display:grid;grid-template-columns:1.35fr .75fr;gap:14px}
+.panel{
+  position:relative;background:linear-gradient(145deg,rgba(8,13,24,.98),rgba(4,6,12,.98));
+  border:1px solid var(--line);border-radius:16px;padding:24px;
+  overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.28);
+  animation:fadeUp .5s ease .25s backwards;
+}
+.panel:before{
+  content:"";position:absolute;left:8%;right:8%;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+  box-shadow:0 0 15px rgba(61,125,255,.6);
+}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.panel-kicker{font:700 9px Orbitron;letter-spacing:2.6px;color:var(--blue3)}
+.panel-head h2{font:800 20px Orbitron;margin:8px 0 8px;letter-spacing:-.3px}
+.panel-head p{color:var(--muted);font-size:12.5px;line-height:1.7}
+.format-badge,.entry-count{
+  font:700 7px Orbitron;letter-spacing:1.3px;color:#808ba0;
+  border:1px solid rgba(255,255,255,.09);border-radius:22px;
+  padding:9px 12px;white-space:nowrap;background:rgba(255,255,255,.02);
+}
+.format-badge b{color:var(--blue3)}
+
+/* ===================== EDITOR ===================== */
+.editor{margin-top:20px;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden;background:#03050c}
+.editor-bar{
+  height:38px;padding:0 13px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.06);background:#080d18;
+}
+.editor-bar span{display:flex;gap:5px}
+.editor-bar i{width:7px;height:7px;border-radius:50%;background:#2c3448}
+.editor-bar i:first-child{background:var(--blue);box-shadow:0 0 8px rgba(61,125,255,.7)}
+.editor-bar small{color:#5c6579;font:700 8px Orbitron;letter-spacing:.8px}
+.editor-bar b{margin-left:auto;color:#5c6579;font:700 7px Orbitron;letter-spacing:1px}
+textarea{
+  display:block;width:100%;min-height:255px;resize:vertical;
+  border:0;outline:0;background:#03050c;color:#dae2f0;
+  padding:18px;font:13.5px Inter;line-height:1.75;
+}
+textarea::placeholder{color:#414a5c}
+.panel-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:12px}
+
+/* ===================== DROPZONE ===================== */
+.dropzone{
+  min-height:230px;margin-top:20px;border:1.5px dashed rgba(61,125,255,.45);
+  border-radius:14px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:radial-gradient(circle at 50% 50%,rgba(61,125,255,.09),transparent 65%);
+  cursor:pointer;transition:.28s;
+}
+.dropzone:hover{
+  border-color:rgba(61,125,255,.9);background:rgba(61,125,255,.08);
+  transform:scale(1.01);
+}
+.upload-symbol{font:400 40px Orbitron;color:var(--blue3);text-shadow:0 0 22px rgba(61,125,255,.7)}
+.dropzone strong{font:700 11px Orbitron;letter-spacing:1.1px}
+.dropzone span{color:#535c70;font:700 7px Orbitron;letter-spacing:1.3px}
+.file-meta{margin:11px 0 0;color:#656e82;font:700 8px Orbitron;letter-spacing:1px;word-break:break-all}
+.btn-wide{width:100%;margin-top:13px}
+
+/* ===================== DATA PANEL ===================== */
+.data-panel{margin-top:14px;animation:fadeUp .5s ease .32s backwards}
+.data-list{margin-top:18px;display:grid;gap:8px;max-height:520px;overflow:auto;padding-right:4px}
+.data-list::-webkit-scrollbar{width:5px}
+.data-list::-webkit-scrollbar-thumb{background:#2a3244;border-radius:10px}
+.entry{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:16px;
+  padding:14px 16px;border:1px solid rgba(255,255,255,.06);
+  background:#050810;border-radius:11px;transition:.22s;
+}
+.entry:hover{border-color:rgba(61,125,255,.35);background:#070c18;transform:translateX(3px)}
+.entry .q,.entry .a{font-size:12px;line-height:1.65}
+.entry .q{color:#e6ecf7}
+.entry .a{color:#8f99ad}
+.entry b{color:var(--blue3);font:800 7px Orbitron;margin-right:8px;letter-spacing:.5px}
+.entry-actions{display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+.delete{
+  background:none;border:0;color:#e05a6c;
+  font:700 7px Orbitron;letter-spacing:1.1px;cursor:pointer;padding:5px;transition:.2s;
+}
+.delete:hover{color:#ff7284;text-shadow:0 0 8px rgba(255,80,110,.6)}
+.edit{
+  background:none;border:0;color:#5f97ff;
+  font:700 7px Orbitron;letter-spacing:1.1px;cursor:pointer;padding:5px;transition:.2s;
+}
+.edit:hover{color:#8ab4ff;text-shadow:0 0 8px rgba(95,151,255,.6)}
+.empty{text-align:center;padding:36px;color:#5c6579;font:700 8px Orbitron;letter-spacing:1.6px}
+
+/* ===================== SEARCH BAR ===================== */
+.search-bar{
+  margin-top:18px;display:flex;align-items:center;gap:11px;
+  border:1px solid rgba(255,255,255,.1);border-radius:11px;
+  background:#03050c;padding:0 14px;transition:.25s;
+}
+.search-bar:focus-within{
+  border-color:rgba(61,125,255,.85);
+  box-shadow:0 0 0 3px rgba(61,125,255,.08),0 0 24px rgba(61,125,255,.12);
+}
+.search-bar input{
+  flex:1;min-width:0;background:transparent;border:0;outline:0;
+  color:#fff;padding:14px 5px;font:13.5px Inter;
+}
+.search-bar input::placeholder{color:#414a5c}
+.search-bar>span{color:#6e788c;font-size:15px}
+.search-bar button{
+  background:none;border:0;color:#6e788c;
+  font:700 7px Orbitron;letter-spacing:1.1px;cursor:pointer;padding:8px;transition:.2s;
+}
+.search-bar button:hover{color:var(--blue3)}
+
+/* ===================== EDIT BOX ===================== */
+.edit-box{
+  margin-top:10px;border:1px solid rgba(61,125,255,.5);border-radius:11px;
+  background:#060a14;padding:15px;display:grid;gap:11px;
+  animation:fadeUp .22s ease;
+  box-shadow:0 0 30px rgba(61,125,255,.1);
+}
+.edit-box label{display:block;color:#6e788c;font:700 7px Orbitron;letter-spacing:1.6px;margin-bottom:6px}
+.edit-box input,.edit-box textarea{
+  width:100%;background:#03050c;border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;color:#e6ecf7;padding:11px;font:12.5px Inter;outline:0;transition:.2s;
+}
+.edit-box input:focus,.edit-box textarea:focus{
+  border-color:rgba(61,125,255,.85);box-shadow:0 0 0 3px rgba(61,125,255,.08);
+}
+.edit-box textarea{min-height:100px;resize:vertical}
+.edit-actions{display:flex;justify-content:flex-end;gap:8px}
+.edit-actions .btn{padding:10px 14px}
+
+/* ===================== TRAIN PANEL ===================== */
+.train-panel{
+  position:relative;display:flex;align-items:center;gap:26px;
+  margin-top:14px;padding:26px;border:1px solid rgba(61,125,255,.34);
+  border-radius:16px;background:linear-gradient(100deg,#080d18,#050710);
+  overflow:hidden;animation:fadeUp .5s ease .4s backwards;
+}
+.train-glow{
+  position:absolute;width:280px;height:160px;left:-90px;top:-60px;
+  background:rgba(61,125,255,.14);filter:blur(50px);pointer-events:none;
+}
+.train-panel>div:nth-child(2){position:relative;z-index:1;flex:1}
+.train-panel h2{font:800 20px Orbitron;margin:8px 0 8px}
+.train-panel p{color:var(--muted);font-size:12.5px;line-height:1.7}
+.btn-train{position:relative;z-index:1;min-width:150px}
+.train-panel .status{position:relative;z-index:1;min-width:130px;margin:0}
+
+/* ===================== STATUS ===================== */
+.status{min-height:18px;margin-top:11px;color:#ff7284;font-size:11.5px;transition:.2s}
+.status.ok{color:#4dd4ff}
+
+/* ===================== FOOTER ===================== */
+footer{
+  text-align:center;padding:24px 16px 32px;color:#4f586c;
+  font:700 8px Orbitron;letter-spacing:1.7px;
+}
+footer span{color:#78849a}
+footer strong{color:var(--blue3);font-weight:800}
+
+/* ===================== RESPONSIVE ===================== */
+@media(max-width:850px){
+  .workspace{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .dashboard-head{align-items:flex-start}
+  .entry{grid-template-columns:1fr}
+  .entry .a{border-top:1px solid rgba(255,255,255,.06);padding-top:9px}
+  .entry-actions{flex-direction:row;justify-content:flex-end}
+  .train-panel{flex-wrap:wrap}
+  .train-panel .status{width:100%}
+}
+@media(max-width:600px){
+  .topbar{height:74px;padding:0 14px}
+  .brand-mark{width:38px;height:38px;font-size:16px}
+  .brand-copy strong{font-size:15px}
+  .brand-copy small{font-size:6px;letter-spacing:1.6px}
+  .live-dot{display:none}
+  .open-ai{padding:10px 11px;font-size:8px}
+  .page{width:min(100% - 20px,560px);padding:28px 0 44px}
+  .dashboard-head{flex-direction:column;gap:16px}
+  .dashboard-head h1{font-size:30px}
+  .head-actions{width:100%}
+  .head-actions .btn{flex:1}
+  .stats{grid-template-columns:1fr}
+  .panel{padding:18px}
+  .panel-head{flex-direction:column;gap:12px}
+  .format-badge,.entry-count{align-self:flex-start}
+  .editor textarea{min-height:250px}
+  .panel-actions{justify-content:stretch}
+  .panel-actions .btn{flex:1}
+  .dropzone{min-height:180px}
+  .train-panel{align-items:stretch;flex-direction:column}
+  .btn-train{width:100%}
+  .system-strip em{display:none}
+  .loader-core{width:105px;height:105px}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="scanline"></div>
+
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="https://darknight.a-c-c.workers.dev" aria-label="DARKNIGHT Ai">
+      <span class="brand-mark"><span>D</span></span>
+      <span class="brand-copy">
+        <strong>DARKNIGHT <i>Ai</i></strong>
+        <small>ADMIN CONTROL</small>
+      </span>
+    </a>
+    <div class="top-actions">
+      <span class="live-dot"><b></b> SECURE CONSOLE</span>
+      <a class="open-ai" href="https://darknight.a-c-c.workers.dev">OPEN AI ↗</a>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ============ LOADING SCREEN ============ -->
+    <section id="loadingScreen" class="loading-wrap">
+      <div class="loader-core">
+        <div class="ripple"></div>
+        <div class="ripple d"></div>
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="core-dot"></div>
+      </div>
+      <div class="loader-text">AUTHENTICATING…</div>
+      <div class="loader-sub">SECURE CONNECTION // DARKNIGHT AI</div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section id="dashboard" class="hidden">
+      <div class="dashboard-head">
+        <div>
+          <div class="eyebrow">KNOWLEDGE CORE</div>
+          <h1>Training Console</h1>
+          <p>Manage knowledge, import Q&amp;A data and synchronize the DARKNIGHT Ai brain in real time.</p>
+        </div>
+        <div class="head-actions">
+          <button id="refreshBtn" class="btn btn-ghost">REFRESH</button>
+          <button id="trainTopBtn" class="btn btn-primary">TRAIN NOW ↗</button>
+        </div>
+      </div>
+
+      <div class="system-strip">
+        <span><i class="pulse"></i> CONNECTION</span>
+        <strong id="health">CHECKING</strong>
+        <em>API // RENDER</em>
+      </div>
+
+      <div class="stats">
+        <article class="stat-card">
+          <div class="stat-top"><span>KNOWLEDGE ENTRIES</span><i>01</i></div>
+          <strong id="count">—</strong>
+          <small>QUESTIONS IN DATA</small>
+        </article>
+        <article class="stat-card">
+          <div class="stat-top"><span>VOCABULARY</span><i>02</i></div>
+          <strong id="vocab">—</strong>
+          <small>KNOWN TOKENS</small>
+        </article>
+        <article class="stat-card status-card">
+          <div class="stat-top"><span>STATUS</span><i>03</i></div>
+          <strong id="statusValue">CHECKING</strong>
+          <small>LIVE API STATE</small>
+        </article>
+      </div>
+
+      <div class="workspace">
+        <section class="panel import-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">BULK IMPORT</span>
+              <h2>Inject Knowledge</h2>
+              <p>Paste multiple Q&amp;A pairs and add them to the knowledge core.</p>
+            </div>
+            <span class="format-badge">QUESTION <b>|</b> ANSWER</span>
+          </div>
+
+          <div class="editor">
+            <div class="editor-bar">
+              <span><i></i><i></i><i></i></span>
+              <small>knowledge_input.txt</small>
+              <b id="lineCount">0 LINES</b>
+            </div>
+            <textarea id="bulk" spellcheck="false" placeholder="tumi ke? | Ami DARKNIGHT Ai — ekta smart assistant.
+tomar nam ki? | Amar nam DARKNIGHT Ai."></textarea>
+          </div>
+
+          <div class="panel-actions">
+            <button id="clearBulk" class="btn btn-ghost">CLEAR</button>
+            <button id="importBtn" class="btn btn-primary">IMPORT DATA →</button>
+          </div>
+          <div id="importStatus" class="status"></div>
+        </section>
+
+        <section class="panel file-panel">
+          <div class="panel-head">
+            <div>
+              <span class="panel-kicker">FILE IMPORT</span>
+              <h2>Upload Dataset</h2>
+              <p>Import a TXT or CSV file using the same Q&amp;A format.</p>
+            </div>
+          </div>
+
+          <label class="dropzone" for="fileInput">
+            <div class="upload-symbol">↑</div>
+            <strong>DROP FILE OR CHOOSE</strong>
+            <span>.TXT / .CSV • MAX 5 MB</span>
+          </label>
+          <input id="fileInput" type="file" accept=".txt,.csv,text/plain,text/csv" hidden>
+          <div id="fileName" class="file-meta">NO FILE SELECTED</div>
+          <button id="uploadBtn" class="btn btn-primary btn-wide">IMPORT FILE DATA →</button>
+          <div id="fileStatus" class="status"></div>
+        </section>
+      </div>
+
+      <section class="panel data-panel">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker">KNOWLEDGE DATABASE</span>
+            <h2>Current Entries</h2>
+            <p>Search, edit or delete the Q&amp;A knowledge stored by the API.</p>
+          </div>
+          <span class="entry-count" id="entryCount">0 ENTRIES</span>
+        </div>
+
+        <div class="search-bar">
+          <span>⌕</span>
+          <input id="searchInput" type="text" placeholder="Search question or answer…" autocomplete="off">
+          <button id="clearSearch" type="button">CLEAR</button>
+        </div>
+
+        <div id="dataList" class="data-list">
+          <div class="empty">LOADING KNOWLEDGE …</div>
+        </div>
+      </section>
+
+      <section class="train-panel">
+        <div class="train-glow"></div>
+        <div>
+          <span class="panel-kicker">MODEL UPDATE</span>
+          <h2>Synchronize Knowledge Core</h2>
+          <p>Run the backend training action after adding new knowledge.</p>
+        </div>
+        <button id="trainBtn" class="btn btn-primary btn-train">TRAIN NOW ↗</button>
+        <div id="trainStatus" class="status"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer>
+    <span>DARKNIGHT-AI</span> POWERED BY <strong>ASSASSIN CYBER COLLECTIVE -ACC</strong>
+  </footer>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const API_URL = "https://darknight-ai-ieg1.onrender.com";
+const ADMIN_PASSWORD = "@ACC@#@!";
+const $ = id => document.getElementById(id);
+
+let adminToken = sessionStorage.getItem("dn_token") || "";
+let allItems = [];
+let searchTerm = "";
+let editingIndex = null;
+let selectedFile = null;
+
+/* ===================== HELPERS ===================== */
+function status(el, msg, ok = false){
+  if(!el) return;
+  el.textContent = msg || "";
+  el.classList.toggle("ok", !!ok);
+}
+function authHeaders(){
+  return {"Content-Type":"application/json","X-Admin-Token":adminToken};
+}
+async function readJSON(response){
+  const data = await response.json().catch(() => ({}));
+  if(!response.ok) throw new Error(data.detail || data.message || `Request failed (${response.status})`);
+  return data;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ===================== AUTO LOGIN ===================== */
+async function autoLogin(){
+  // If already have token, verify it works
+  if(adminToken){
+    try{
+      const r = await fetch(`${API_URL}/api/admin/stats`,{headers:authHeaders()});
+      if(r.ok){ showDashboard(); return; }
+    }catch(e){ /* ignore, will re-login */ }
+    // token invalid, clear
+    sessionStorage.removeItem("dn_token");
+    adminToken = "";
+  }
+  // Do silent login with hardcoded password
+  try{
+    const r = await fetch(`${API_URL}/api/admin/login`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password:ADMIN_PASSWORD})
+    });
+    const d = await readJSON(r);
+    adminToken = d.token || d.access_token || d.admin_token || "";
+    if(!adminToken) throw new Error("No token received");
+    sessionStorage.setItem("dn_token", adminToken);
+    showDashboard();
+  }catch(e){
+    // show error in loading screen
+    const wrap = document.querySelector(".loading-wrap");
+    if(wrap){
+      wrap.innerHTML = `
+        <div class="loader-core">
+          <div class="ring r1" style="border-top-color:#ff5566;border-right-color:#ff5566;animation:none;opacity:.7"></div>
+          <div class="core-dot" style="background:radial-gradient(circle,#ff7284,#b91d33 70%);box-shadow:0 0 30px #ff3347"></div>
+        </div>
+        <div class="loader-text" style="color:#ff7284;text-shadow:0 0 14px rgba(255,80,110,.6)">CONNECTION FAILED</div>
+        <div class="loader-sub" style="color:#7a4a55;max-width:420px;text-align:center;line-height:1.7">${escapeHtml(e.message.toUpperCase())}<br><br>RENDER SERVER জাগতে ৩০-৬০ সেকেন্ড লাগতে পারে — REFRESH করুন</div>
+      `;
+    }
+  }
+}
+function showDashboard(){
+  $("loadingScreen").classList.add("hidden");
+  $("dashboard").classList.remove("hidden");
+  loadAll();
+}
+
+/* ===================== DATA ===================== */
+function parseBulk(text){
+  return text.split(/\r?\n/).map((line, i) => {
+    const raw = line.trim();
+    if(!raw) return null;
+    const pos = raw.indexOf("|");
+    if(pos < 1) return {bad:i+1, line:raw};
+    const question = raw.slice(0, pos).trim();
+    const answer = raw.slice(pos + 1).trim();
+    if(!question || !answer) return {bad:i+1, line:raw};
+    return {question, answer};
+  }).filter(Boolean);
+}
+async function importPairs(pairs, statusEl){
+  const valid = pairs.filter(x => x.question && x.answer);
+  const bad = pairs.filter(x => x.bad);
+  if(!valid.length) return status(statusEl, "NO VALID Q&A PAIRS FOUND.");
+  status(statusEl, `UPLOADING 0 / ${valid.length}…`);
+  try{
+    let added = 0;
+    for(const item of valid){
+      const r = await fetch(`${API_URL}/api/admin/data`, {
+        method:"POST", headers:authHeaders(),
+        body:JSON.stringify({question:item.question, answer:item.answer})
+      });
+      await readJSON(r);
+      added++;
+      if(added === valid.length || added % 5 === 0){
+        status(statusEl, `UPLOADING ${added} / ${valid.length}…`);
+      }
+    }
+    status(statusEl, `✓ ${added} ENTRIES IMPORTED${bad.length ? ` • ${bad.length} INVALID SKIPPED` : ""}.`, true);
+    await loadAll();
+  }catch(e){ status(statusEl, e.message.toUpperCase()); }
+}
+async function loadAll(){
+  $("health").textContent = "CHECKING";
+  $("statusValue").textContent = "CHECKING";
+  try{
+    const [statsR, healthR, dataR] = await Promise.all([
+      fetch(`${API_URL}/api/admin/stats`, {headers:authHeaders()}),
+      fetch(`${API_URL}/api/health`),
+      fetch(`${API_URL}/api/admin/data`, {headers:authHeaders()})
+    ]);
+    const stats = await readJSON(statsR);
+    const health = healthR.ok;
+    const raw = await readJSON(dataR);
+    const items = Array.isArray(raw) ? raw : (raw.data || raw.items || []);
+    const count = stats.questions ?? stats.total ?? items.length ?? 0;
+    const vocab = stats.vocabulary ?? stats.vocab ?? "—";
+    $("count").textContent = count;
+    $("vocab").textContent = vocab;
+    $("health").textContent = health ? "ONLINE" : "OFFLINE";
+    $("health").style.color = health ? "#4dd4ff" : "#ff7284";
+    $("statusValue").textContent = health ? "ONLINE" : "OFFLINE";
+    $("statusValue").style.color = health ? "#4dd4ff" : "#ff7284";
+    allItems = items;
+    renderData();
+  }catch(e){
+    $("health").textContent = "OFFLINE";
+    $("statusValue").textContent = "OFFLINE";
+    $("health").style.color = "#ff7284";
+    $("statusValue").style.color = "#ff7284";
+    $("dataList").innerHTML = '<div class="empty">COULD NOT LOAD KNOWLEDGE CORE.</div>';
+  }
+}
+function getFilteredItems(){
+  if(!searchTerm) return allItems;
+  const term = searchTerm.toLowerCase();
+  return allItems.filter(x => {
+    const q = String(x.question ?? x.q ?? "").toLowerCase();
+    const a = String(x.answer ?? x.a ?? "").toLowerCase();
+    return q.includes(term) || a.includes(term);
+  });
+}
+function renderData(){
+  const items = getFilteredItems();
+  $("entryCount").textContent = searchTerm ? `${items.length} / ${allItems.length} ENTRIES` : `${allItems.length} ENTRIES`;
+  if(!items.length){
+    $("dataList").innerHTML = `<div class="empty">${searchTerm ? "NO MATCHING ENTRIES FOUND." : "NO KNOWLEDGE ENTRIES YET."}</div>`;
+    return;
+  }
+  $("dataList").innerHTML = items.map(item => {
+    const realIndex = allItems.indexOf(item);
+    const q = item.question ?? item.q ?? "";
+    const a = item.answer ?? item.a ?? "";
+    const idx = item.index ?? realIndex;
+    if(realIndex === editingIndex){
+      return `<article class="entry" data-real="${realIndex}">
+        <div class="edit-box" style="grid-column:1/-1">
+          <div><label>QUESTION</label><input id="editQ" type="text" value="${escapeHtml(q)}"></div>
+          <div><label>ANSWER</label><textarea id="editA">${escapeHtml(a)}</textarea></div>
+          <div class="edit-actions">
+            <button class="btn btn-ghost" id="cancelEdit">CANCEL</button>
+            <button class="btn btn-primary" id="saveEdit">SAVE →</button>
+          </div>
+          <div id="editStatus" class="status"></div>
+        </div>
+      </article>`;
+    }
+    return `<article class="entry" data-real="${realIndex}">
+      <div class="q"><b>#${realIndex+1}</b>${escapeHtml(q)}</div>
+      <div class="a">${escapeHtml(a)}</div>
+      <div class="entry-actions">
+        <button class="edit" data-index="${escapeHtml(idx)}" data-real="${realIndex}">EDIT</button>
+        <button class="delete" data-index="${escapeHtml(idx)}">DELETE</button>
+      </div>
+    </article>`;
+  }).join("");
+
+  document.querySelectorAll(".delete").forEach(btn => {
+    btn.onclick = async () => {
+      if(!confirm("Delete this knowledge entry?")) return;
+      btn.disabled = true;
+      try{
+        const r = await fetch(`${API_URL}/api/admin/data/${encodeURIComponent(btn.dataset.index)}`, {
+          method:"DELETE", headers:authHeaders()
+        });
+        await readJSON(r);
+        await loadAll();
+      }catch(e){ alert(e.message); }
+      finally{ btn.disabled = false; }
+    };
+  });
+
+  document.querySelectorAll(".edit").forEach(btn => {
+    btn.onclick = () => {
+      editingIndex = Number(btn.dataset.real);
+      renderData();
+    };
+  });
+
+  const cancelBtn = $("cancelEdit");
+  if(cancelBtn) cancelBtn.onclick = () => { editingIndex = null; renderData(); };
+
+  const saveBtn = $("saveEdit");
+  if(saveBtn) saveBtn.onclick = () => saveEdit();
+}
+async function saveEdit(){
+  const item = allItems[editingIndex];
+  if(!item) return;
+  const q = $("editQ").value.trim();
+  const a = $("editA").value.trim();
+  if(!q || !a) return status($("editStatus"), "QUESTION AND ANSWER REQUIRED.");
+  const idx = item.index ?? editingIndex;
+  const saveBtn = $("saveEdit");
+  if(saveBtn) saveBtn.disabled = true;
+  status($("editStatus"), "SAVING…");
+  try{
+    const delR = await fetch(`${API_URL}/api/admin/data/${encodeURIComponent(idx)}`, {
+      method:"DELETE", headers:authHeaders()
+    });
+    if(!delR.ok && delR.status !== 404){ await readJSON(delR); }
+
+    status($("editStatus"), "UPDATING…");
+    const addR = await fetch(`${API_URL}/api/admin/data`, {
+      method:"POST", headers:authHeaders(),
+      body:JSON.stringify({question:q, answer:a})
+    });
+    await readJSON(addR);
+
+    editingIndex = null;
+    status($("editStatus"), "");
+    await loadAll();
+  }catch(e){ status($("editStatus"), e.message.toUpperCase()); }
+  finally{ if(saveBtn) saveBtn.disabled = false; }
+}
+function updateLines(){
+  const n = $("bulk").value.split(/\r?\n/).filter(x => x.trim()).length;
+  $("lineCount").textContent = `${n} LINES`;
+}
+async function trainNow(btn, statusEl){
+  if(btn) btn.disabled = true;
+  status(statusEl, "SYNCHRONIZING…");
+  try{
+    const r = await fetch(`${API_URL}/api/admin/train`, {
+      method:"POST", headers:authHeaders(), body:JSON.stringify({})
+    });
+    await readJSON(r);
+    status(statusEl, "✓ KNOWLEDGE CORE SYNCHRONIZED.", true);
+    await loadAll();
+  }catch(e){ status(statusEl, e.message.toUpperCase()); }
+  finally{ if(btn) btn.disabled = false; }
+}
+
+/* ===================== EVENTS ===================== */
+$("refreshBtn").onclick = loadAll;
+$("trainTopBtn").onclick = () => trainNow($("trainTopBtn"), $("trainStatus"));
+$("trainBtn").onclick = () => trainNow($("trainBtn"), $("trainStatus"));
+$("clearBulk").onclick = () => { $("bulk").value = ""; updateLines(); status($("importStatus"), ""); };
+$("bulk").oninput = updateLines;
+$("importBtn").onclick = () => importPairs(parseBulk($("bulk").value), $("importStatus"));
+
+$("fileInput").onchange = e => {
+  selectedFile = e.target.files[0] || null;
+  $("fileName").textContent = selectedFile ? selectedFile.name.toUpperCase() : "NO FILE SELECTED";
+  if(!selectedFile) return status($("fileStatus"), "");
+  if(selectedFile.size > 5 * 1024 * 1024){
+    selectedFile = null;
+    $("fileName").textContent = "FILE TOO LARGE";
+    return status($("fileStatus"), "KEEP FILE UNDER 5 MB.");
+  }
+  status($("fileStatus"), `${(selectedFile.size/1024).toFixed(1)} KB READY.`, true);
+};
+
+const dropzone = document.querySelector(".dropzone");
+["dragenter","dragover"].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.style.borderColor = "rgba(61,125,255,.95)";
+}));
+["dragleave","drop"].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.style.borderColor = "";
+}));
+dropzone.addEventListener("drop", e => {
+  const file = e.dataTransfer.files[0];
+  if(!file) return;
+  selectedFile = file;
+  $("fileName").textContent = file.name.toUpperCase();
+  status($("fileStatus"), `${(file.size/1024).toFixed(1)} KB READY.`, true);
+});
+
+$("uploadBtn").onclick = async () => {
+  if(!selectedFile) return status($("fileStatus"), "CHOOSE A TXT OR CSV FILE FIRST.");
+  if(selectedFile.size > 5 * 1024 * 1024) return;
+  try{
+    const text = await selectedFile.text();
+    await importPairs(parseBulk(text), $("fileStatus"));
+  }catch(e){ status($("fileStatus"), "COULD NOT READ FILE."); }
+};
+
+$("searchInput").oninput = e => {
+  searchTerm = e.target.value.trim();
+  editingIndex = null;
+  renderData();
+};
+$("clearSearch").onclick = () => {
+  $("searchInput").value = "";
+  searchTerm = "";
+  editingIndex = null;
+  renderData();
+};
+
+/* ===================== BOOT ===================== */
+updateLines();
+autoLogin();
+</script>
+</body>
+</html>
