@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080000">
+<title>ACCESS DENIED</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#ff001e;--dark:#080000}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+background:radial-gradient(ellipse at center,#280006 0%,#100003 42%,#030303 100%);
+color:#fff;font-family:Arial,Helvetica,sans-serif;
+display:flex;align-items:center;justify-content:center;
+}
+body:before{
+content:"";position:fixed;inset:0;pointer-events:none;
+background:repeating-linear-gradient(0deg,transparent 0px,transparent 3px,rgba(255,0,25,.055) 4px,transparent 5px);
+z-index:5;
+}
+body:after{
+content:"";position:fixed;inset:0;pointer-events:none;
+background:radial-gradient(ellipse,transparent 35%,rgba(0,0,0,.86) 100%);
+z-index:4;
+}
+.noise{
+position:fixed;inset:-50%;width:200%;height:200%;
+opacity:.12;pointer-events:none;z-index:3;
+background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+animation:noise .2s steps(2) infinite;
+}
+@keyframes noise{0%{transform:translate(0,0)}25%{transform:translate(2%,-1%)}50%{transform:translate(-1%,2%)}75%{transform:translate(1%,1%)}100%{transform:translate(-2%,-1%)}}
+.grid{
+position:fixed;inset:0;opacity:.15;pointer-events:none;
+background-image:linear-gradient(rgba(255,0,25,.17) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,25,.17) 1px,transparent 1px);
+background-size:42px 42px;
+mask-image:radial-gradient(ellipse,black,transparent 75%);
+}
+.container{
+position:relative;z-index:6;width:min(92%,650px);
+text-align:center;padding:30px 20px;
+border:1px solid rgba(255,0,30,.4);
+background:linear-gradient(145deg,rgba(35,0,5,.78),rgba(5,0,0,.88));
+box-shadow:0 0 35px #ff001e18,inset 0 0 40px #ff001e0b;
+animation:appear 1.2s ease both;
+}
+@keyframes appear{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.corner{position:absolute;width:22px;height:22px;border-color:#ff001e;border-style:solid}
+.c1{top:-2px;left:-2px;border-width:2px 0 0 2px}
+.c2{top:-2px;right:-2px;border-width:2px 2px 0 0}
+.c3{bottom:-2px;left:-2px;border-width:0 0 2px 2px}
+.c4{bottom:-2px;right:-2px;border-width:0 2px 2px 0}
+.symbol{
+width:74px;height:74px;margin:0 auto 22px;
+border:2px solid var(--red);border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-size:39px;color:var(--red);
+text-shadow:0 0 18px var(--red);
+box-shadow:0 0 25px #ff001e45,inset 0 0 20px #ff001e18;
+animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 12px #ff001e30,inset 0 0 10px #ff001e15}50%{box-shadow:0 0 35px #ff001e99,inset 0 0 25px #ff001e30}}
+.label{
+color:#ff3348;font-size:10px;letter-spacing:5px;
+margin-bottom:16px;font-weight:bold;
+}
+h1{
+font-size:clamp(30px,7.5vw,61px);line-height:1.08;
+font-weight:900;letter-spacing:-1px;
+color:#fff;text-transform:uppercase;
+text-shadow:0 0 8px #ff001e,0 0 22px #ff001e90;
+animation:flicker 5s infinite;
+}
+@keyframes flicker{0%,18%,20%,22%,60%,62%,100%{opacity:1}19%,61%{opacity:.72}}
+.line{height:1px;width:75%;margin:25px auto;background:linear-gradient(90deg,transparent,#ff001e,transparent);box-shadow:0 0 12px #ff001e}
+.message{
+font-size:clamp(14px,3.6vw,18px);line-height:1.8;
+color:#d6b8bc;letter-spacing:.5px;
+}
+.message strong{color:#ff3045;font-weight:700}
+.mask{font-size:24px;vertical-align:middle}
+.status{
+margin-top:27px;display:flex;align-items:center;justify-content:center;gap:9px;
+font-size:10px;letter-spacing:3px;color:#ff5263;
+}
+.dot{height:7px;width:7px;background:#ff001e;border-radius:50%;box-shadow:0 0 12px #ff001e;animation:blink .8s infinite}
+@keyframes blink{50%{opacity:.15}}
+.buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:27px}
+button{
+padding:13px 18px;background:#1a0004;border:1px solid #ff001e;
+color:#ff3348;font-size:10px;font-weight:bold;letter-spacing:2px;
+cursor:pointer;min-height:44px;transition:.2s;
+}
+button:hover,button:active{background:#ff001e;color:#fff;box-shadow:0 0 22px #ff001e66}
+button:focus-visible{outline:2px solid white;outline-offset:3px}
+.footer{margin-top:27px;color:#55333a;font-size:9px;letter-spacing:3px}
+.glitch{
+position:fixed;inset:0;z-index:7;pointer-events:none;
+background:#ff001e;opacity:0;animation:glitch 9s infinite;
+}
+@keyframes glitch{
+0%,92%,93%,95%,100%{opacity:0}
+92.3%{opacity:.07;transform:translateX(5px)}
+93.2%{opacity:.04;transform:translateX(-8px)}
+94%{opacity:.08;transform:translateX(3px)}
+}
+@media(max-height:570px){
+.container{padding:16px}
+.symbol{width:48px;height:48px;font-size:27px;margin-bottom:10px}
+.label{margin-bottom:10px}
+.line{margin:14px auto}
+.status{margin-top:14px}
+.buttons{margin-top:14px}
+.footer{margin-top:14px}
+}
+@media(prefers-reduced-motion:reduce){
+*,*:before,*:after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="grid"></div>
+<div class="glitch"></div>
+
+<main class="container">
+<div class="corner c1"></div>
+<div class="corner c2"></div>
+<div class="corner c3"></div>
+<div class="corner c4"></div>
+
+<div class="symbol">!</div>
+<div class="label">RESTRICTED AREA // 001</div>
+
+<h1>THIS IS NOT<br>FOR YOU</h1>
+
+<div class="line"></div>
+
+<p class="message">
+You can find this after an<br>
+<strong>admin gives you</strong> <span class="mask">😷</span>
+</p>
+
+<div class="status">
+<span class="dot"></span>
+<span id="statusText">ACCESS RESTRICTED</span>
+</div>
+
+<div class="buttons">
+<button id="soundBtn">▶ ENABLE BEEP</button>
+<button id="stopBtn">■ SILENCE</button>
+</div>
+
+<div class="footer">UNAUTHORIZED ACCESS IS PROHIBITED</div>
+</main>
+
+<script>
+let audioCtx=null;
+let soundTimer=null;
+let soundOn=false;
+
+function beep(){
+if(!audioCtx||audioCtx.state!=="running"||!soundOn)return;
+const now=audioCtx.currentTime;
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+osc.type="square";
+osc.frequency.setValueAtTime(880,now);
+osc.frequency.setValueAtTime(660,now+0.075);
+gain.gain.setValueAtTime(0.0001,now);
+gain.gain.exponentialRampToValueAtTime(0.12,now+0.008);
+gain.gain.setValueAtTime(0.12,now+0.09);
+gain.gain.exponentialRampToValueAtTime(0.0001,now+0.12);
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+osc.start(now);
+osc.stop(now+0.13);
+}
+
+async function startSound(){
+try{
+if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==="suspended")await audioCtx.resume();
+soundOn=true;
+beep();
+clearInterval(soundTimer);
+soundTimer=setInterval(beep,1400);
+document.getElementById("soundBtn").textContent="Ⅱ BEEP ACTIVE";
+document.getElementById("statusText").textContent="WARNING SYSTEM ACTIVE";
+}catch(e){
+document.getElementById("statusText").textContent="SOUND UNAVAILABLE";
+}
+}
+
+function stopSound(){
+soundOn=false;
+clearInterval(soundTimer);
+soundTimer=null;
+document.getElementById("soundBtn").textContent="▶ ENABLE BEEP";
+document.getElementById("statusText").textContent="ACCESS RESTRICTED";
+}
+
+document.getElementById("soundBtn").addEventListener("click",()=>{
+if(soundOn)stopSound();
+else startSound();
+});
+document.getElementById("stopBtn").addEventListener("click",stopSound);
+document.addEventListener("visibilitychange",()=>{
+if(document.hidden)stopSound();
+});
+</script>
+</body>
+</html>
